@@ -24,13 +24,9 @@ abstract class Enemy : Actor() {
 
     var state = State.ALIVE
 
-    private fun rectToPoly(r: Rectangle): Polygon {
-        return Polygon(floatArrayOf(r.x, r.y, r.x, r.y + r.height, r.x + r.width, r.y + r.height, r.x + r.width, r.y))
-    }
+    private fun rectToPoly(r: Rectangle): Polygon = Polygon(floatArrayOf(r.x, r.y, r.x, r.y + r.height, r.x + r.width, r.y + r.height, r.x + r.width, r.y))
 
-    protected fun checkYCollision(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Boolean {
-        return vel.y < 0 && Intersector.intersectSegmentPolygon(p1, p2, rectToPoly(r))
-    }
+    protected fun checkYCollision(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Boolean = vel.y < 0 && Intersector.intersectSegmentPolygon(p1, p2, rectToPoly(r))
 
     protected fun findYOnSlope(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Float {
         val upward = p1.y < p2.y
@@ -42,20 +38,10 @@ abstract class Enemy : Actor() {
     }
 
     fun drawSquare() {
-        GameObj.sr.begin(ShapeType.Line)
-        GameObj.sr.rect(sprite.x, sprite.y, sprite.width, sprite.height)
-        GameObj.sr.end()
+        with(GameObj.sr) {
+            begin(ShapeType.Line)
+            rect(sprite.x, sprite.y, sprite.width, sprite.height)
+            end()
+        }
     }
-
-//    fun checkWallHit() {
-//        // get the tiles from map utilities
-//        val tiles = GameObj.mm.getHorizNeighbourTiles(vel, sprite, "tiles01")
-//        //if enemy collides with any tile while walking right/left,reverse his horizontal motion
-//        for (tile in tiles) {
-//            if (rectangle.overlaps(tile)) {
-//                vel.x *= -1f
-//                break
-//            }
-//        }
-//    }
 }

@@ -14,33 +14,6 @@ import com.central.Constants
 import com.central.GameObj
 import com.central.managers.grav
 
-private fun rectToPoly(r: Rectangle): Polygon {
-    return Polygon(floatArrayOf(r.x, r.y, r.x, r.y + r.height, r.x + r.width, r.y + r.height, r.x + r.width, r.y))
-}
-
-private fun checkYCollision(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Boolean {
-    return vel.y < 0 && Intersector.intersectSegmentPolygon(p1, p2, rectToPoly(r))
-}
-
-private fun bounceUpSlope(p1: Vector2, p2: Vector2, vel: Vector2, spr: Sprite, g: Boolean): Boolean {
-    if (vel.x > 0 && vel.x < 0.5 || vel.x < 0 && vel.x > -0.5) return false
-    if (g && p1.x < spr.x && p2.x > spr.x) {
-        if (vel.x < 0 && p1.y > p2.y || vel.x > 0 && p1.y < p2.y) {
-            vel.y += 20f
-            return true
-        }
-    }
-    return false
-}
-
-private fun findYOnSlope(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Float {
-    val upward = p1.y < p2.y
-    if (p1.y == p2.y || upward && p1.x > r.x || !upward && p2.x < r.x + r.width) return r.y
-    val opp = if (upward) p1.y - p2.y else p2.y - p1.y
-    val adj = if (upward) p1.x - p2.x else p2.x - p1.x
-    val myadj = if (upward) r.x - p1.x else r.x - p2.x
-    return if (upward) p1.y + opp * myadj / adj else p2.y + opp * myadj / adj - r.height / 2
-}
 
 class State
 
@@ -58,19 +31,21 @@ enum class LifeState {
 }
 
 class Player : Actor() {
-    var lifeState = LifeState.ALIVE
-    val sprite = Sprite()
     private val tex = Texture("adventurer_sheet.png")
-    internal var walkSheet = TextureRegion(tex, 0, 0, tex.width, tex.height)
-    internal var currentFrame: TextureRegion
+    private var walkSheet = TextureRegion(tex, 0, 0, tex.width, tex.height)
+    private var currentFrame: TextureRegion
     private val vel = Vector2(0f, 0f)
-    var rect = Rectangle()
-    var scaledRect = Rectangle()
     private val h = 30f
     private val damping = Vector2(0.9f, 0.9f)
 
     private val maxVelocity = 5f
     private val jumpVelocity = 40f
+
+    var rect = Rectangle()
+    var scaledRect = Rectangle()
+
+    var lifeState = LifeState.ALIVE
+    val sprite = Sprite()
 
     var jumping = false
     var grounded = false
@@ -79,12 +54,12 @@ class Player : Actor() {
     var facesRight = true
 
     var stateTime = 0f
-    var state: State = PlayerStates.walking
+    var state = PlayerStates.walking
 
-    val regions: Array<TextureRegion> = walkSheet.split(80, 96)[0]
-    val stand: Animation<TextureRegion> = Animation(0F, regions[0])
-    val walk: Animation<TextureRegion> = Animation(0.15f, regions[1], regions[2])
-    val jump: Animation<TextureRegion> = Animation(0F, regions[3])
+    val regions = walkSheet.split(80, 96)[0]
+    val stand = Animation(0F, regions[0])
+    val walk = Animation(0.15f, regions[1], regions[2])
+    val jump = Animation(0F, regions[3])
 
     val jumpSnd = Gdx.audio.newSound(Gdx.files.internal("jump.ogg"))
     val pickupSnd = Gdx.audio.newSound(Gdx.files.internal("pickup.ogg"))
@@ -96,6 +71,32 @@ class Player : Actor() {
         this.walk.playMode = Animation.PlayMode.LOOP_PINGPONG
         this.currentFrame = this.walk.getKeyFrame(this.stateTime, true) as TextureRegion
         this.sprite.setSize(h, h)
+    }
+
+    // these are also in the Enemy class, probably just repeated it in both classes because I'm lazy
+    private fun rectToPoly(r: Rectangle): Polygon = Polygon(floatArrayOf(r.x, r.y, r.x, r.y + r.height, r.x + r.width, r.y + r.height, r.x + r.width, r.y))
+
+    private fun checkYCollision(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Boolean = vel.y < 0 && Intersector.intersectSegmentPolygon(p1, p2, rectToPoly(r))
+
+    // this was a cute little experiment, the player like - hops up the slope
+    private fun bounceUpSlope(p1: Vector2, p2: Vector2, vel: Vector2, spr: Sprite, g: Boolean): Boolean {
+        if (vel.x > 0 && vel.x < 0.5 || vel.x < 0 && vel.x > -0.5) return false
+        if (g && p1.x < spr.x && p2.x > spr.x) {
+            if (vel.x < 0 && p1.y > p2.y || vel.x > 0 && p1.y < p2.y) {
+                vel.y += 20f
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun findYOnSlope(p1: Vector2, p2: Vector2, r: Rectangle, vel: Vector2): Float {
+        val upward = p1.y < p2.y
+        if (p1.y == p2.y || upward && p1.x > r.x || !upward && p2.x < r.x + r.width) return r.y
+        val opp = if (upward) p1.y - p2.y else p2.y - p1.y
+        val adj = if (upward) p1.x - p2.x else p2.x - p1.x
+        val myadj = if (upward) r.x - p1.x else r.x - p2.x
+        return if (upward) p1.y + opp * myadj / adj else p2.y + opp * myadj / adj - r.height / 2
     }
 
     private fun handleInput() {
@@ -148,6 +149,7 @@ class Player : Actor() {
 
         this.vel.y -= grav
 
+        // iterating over every single one of ramp polylines and checking for collisions, probably fine to do that
         GameObj.mm.myRamps.forEach {
             if (it is PolylineMapObject) {
                 val myVerts = it.polyline.transformedVertices
@@ -160,16 +162,6 @@ class Player : Actor() {
                 }
             }
         }
-/*
-        GameObj.mm.myWalls.forEach {
-            if (it is RectangleMapObject) {
-                val myShape = it.rectangle
-                if (myShape.overlaps(this.rect)) {
-                    this.vel.x = -this.vel.x
-                }
-            }
-        }
-*/
 
         this.rect.set(this.sprite.x, this.sprite.y + this.vel.y, this.sprite.height, this.sprite.height)
         this.scaledRect.set(this.sprite.x * Constants.unitScale, this.sprite.y * Constants.unitScale + this.vel.y * Constants.unitScale, this.sprite.height * Constants.unitScale, this.sprite.height * Constants.unitScale)
@@ -214,17 +206,19 @@ class Player : Actor() {
         checkOutOfBounds()
 
         val xDiff = this.sprite.x - lastX
+
+        // here's what makes the porallax background shift based on the player's position
         GameObj.gm.parallaxBackground.setSpeed(xDiff * 0.001f)
         GameObj.gm.parallaxBackground.setHeight(-sprite.y.toInt() / 2)
     }
 
     override fun draw(batch: Batch, parentAlpha: Float) {
-        if (this.facesRight) {
-            batch.draw(this.currentFrame, this.scaledRect.x, this.scaledRect.y, this.scaledRect.width, this.scaledRect.height)
-        } else {
-            batch.draw(this.currentFrame, this.scaledRect.x + this.scaledRect.width, this.scaledRect.y, -this.scaledRect.width, this.scaledRect.height)
-        }
+        if (this.facesRight) batch.draw(this.currentFrame, this.scaledRect.x, this.scaledRect.y, this.scaledRect.width, this.scaledRect.height)
+        else batch.draw(this.currentFrame, this.scaledRect.x + this.scaledRect.width, this.scaledRect.y, -this.scaledRect.width, this.scaledRect.height)
+
         batch.end()
+
+        // draw a debug box around the player - I shouldn't have shadowed the variable name rect
         GameObj.sr.begin(ShapeRenderer.ShapeType.Line)
         GameObj.sr.rect(this.rect.x, this.rect.y, this.rect.width, this.rect.height)
         GameObj.sr.end()

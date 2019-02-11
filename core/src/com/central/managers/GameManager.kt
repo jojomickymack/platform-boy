@@ -2,15 +2,13 @@ package com.central.managers
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.utils.Array
 import com.central.Constants
 import com.central.GameObj
-import com.central.actors.ControlButton
 import com.central.actors.OnScreenGamepad
 import com.central.actors.Player
 import com.central.actors.ParallaxBackground
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.Const
+import ktx.actors.plusAssign
 
 const val grav = 2f
 
@@ -33,11 +31,11 @@ class GameManager {
     init {
         textureStrings.forEach { textures.add(Texture(Gdx.files.internal(it))) }
         parallaxBackground = ParallaxBackground(textures)
-        GameObj.backgroundStg.addActor(parallaxBackground)
+        GameObj.backgroundStg += parallaxBackground
 
         GameObj.mm.spawnEnemies()
-        GameObj.stg.addActor(player)
-        GameObj.hudStg.addActor(osgp)
+        GameObj.stg += player
+        GameObj.hudStg += osgp
 
         music.isLooping = true
         music.play()

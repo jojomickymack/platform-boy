@@ -1,15 +1,11 @@
 package com.central.managers
 
-import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.Color.PINK
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.maps.MapLayer
-import com.badlogic.gdx.maps.objects.PolygonMapObject
 import com.badlogic.gdx.maps.objects.PolylineMapObject
-import com.badlogic.gdx.maps.objects.RectangleMapObject
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer
-
-import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.maps.objects.TextureMapObject
 import com.badlogic.gdx.maps.tiled.TiledMapTileLayer
 import com.badlogic.gdx.math.Rectangle
@@ -20,11 +16,13 @@ import com.central.Constants
 import com.central.actors.Zombie
 
 import com.central.GameObj
+import ktx.actors.plusAssign
 
 class MapManager {
     val map = TmxMapLoader().load("map01.tmx")
     val mr = OrthogonalTiledMapRenderer(map, Constants.unitScale)
 
+    // these layers go with the commented out shape parsing logic below which is also commented out
 /*
     val floorLayer = map.layers.get("floors01") as MapLayer
     val myFloors = floorLayer.objects
@@ -53,14 +51,18 @@ class MapManager {
             if (it is PolylineMapObject) {
                 val myVerts = it.polyline.transformedVertices
 
-                GameObj.sr.color = Color.PINK
-                GameObj.sr.begin(ShapeRenderer.ShapeType.Line)
-                GameObj.sr.polyline(myVerts)
-                GameObj.sr.end()
+                with(GameObj.sr) {
+                    color = PINK
+                    begin(ShapeRenderer.ShapeType.Line)
+                    polyline(myVerts)
+                    end()
+                }
             }
         }
     }
 
+    // the reason this is included but commented out is because it's so potentially useful.
+    // If you draw shapes in the tilemap this will draw them into the game
 /*
         myShapes.forEach {
             if (it is PolygonMapObject) {
@@ -97,19 +99,12 @@ class MapManager {
     }
 */
     fun spawnEnemies() {
-        myEnemies.forEach {
-            if (it is TextureMapObject && it.name == "zombie") {
-                val zombie = Zombie(it.x, it.y, it.textureRegion.regionWidth.toFloat(), it.textureRegion.regionHeight.toFloat())
-                GameObj.stg.addActor(zombie)
-            }
-        }
+        myEnemies.forEach { if (it is TextureMapObject && it.name == "zombie") GameObj.stg += Zombie(it.x, it.y, it.textureRegion.regionWidth.toFloat(), it.textureRegion.regionHeight.toFloat()) }
     }
 
     // create a pool of rectangle objects for collision detection
     private val rectPool = object : Pool<Rectangle>() {
-        override fun newObject(): Rectangle {
-            return Rectangle()
-        }
+        override fun newObject(): Rectangle = Rectangle()
     }
 
     fun getTiles(startX: Int, startY: Int, endX: Int, endY: Int, tileLayer: TiledMapTileLayer): Array<Rectangle> {
@@ -131,39 +126,24 @@ class MapManager {
     }
 
     fun getHorizNeighbourTiles(velocity: Vector2, rect: Rectangle, tileLayer: TiledMapTileLayer): Array<Rectangle> {
-        val startX: Int
-        val startY: Int
-        val endX: Int
-        val endY: Int
+        val startY = rect.y.toInt()
+        val endY = (rect.y + rect.height).toInt()
+
         // if the sprite is moving right, get the tiles to its right side
-        if (velocity.x > 0) {
-            endX = (rect.x + rect.width).toInt()
-            startX = endX
-        } else { // if the sprite is moving left, get the tiles to its left side
-            endX = rect.x.toInt()
-            startX = endX
-        }
-        startY = rect.y.toInt()
-        endY = (rect.y + rect.height).toInt()
+        // if the sprite is moving left, get the tiles to its left side
+        val startX = if (velocity.x > 0) (rect.x + rect.width).toInt() else rect.x.toInt()
+        val endX = startX
 
         return getTiles(startX, startY, endX, endY, tileLayer)
     }
 
     fun getVertNeighbourTiles(velocity: Vector2, rect: Rectangle, tileLayer: TiledMapTileLayer): Array<Rectangle> {
-        val startX: Int
-        val startY: Int
-        val endX: Int
-        val endY: Int
+        val startX = rect.x.toInt()
+        val endX = (rect.x + rect.width).toInt()
         // if sprite is moving up, get the tiles above it
-        if (velocity.y > 0) {
-            endY = (rect.y + rect.height).toInt()
-            startY = endY
-        } else { // if sprite is moving down, get the tiles below it
-            endY = rect.y.toInt()
-            startY = endY
-        }
-        startX = rect.x.toInt()
-        endX = (rect.x + rect.width).toInt()
+        // if sprite is moving down, get the tiles below it
+        val startY = if (velocity.y > 0) (rect.y + rect.height).toInt() else rect.y.toInt()
+        val endY = startY
 
         return getTiles(startX, startY, endX, endY, tileLayer)
     }
