@@ -8,12 +8,13 @@ import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.Actor
 import com.central.GameObj
+import ktx.graphics.use
 
 abstract class Enemy : Actor() {
 
     internal var sprite = Sprite() // enemy sprite
     internal var vel = Vector2() // velocity of the enemy
-    internal var rect = Rectangle() // rectangle object to detect collisions
+    internal var myRect = Rectangle() // rectangle object to detect collisions
     internal var scaledRect = Rectangle()
     internal var grounded = false
 
@@ -39,9 +40,9 @@ abstract class Enemy : Actor() {
 
     fun drawSquare() {
         with(GameObj.sr) {
-            begin(ShapeType.Line)
-            rect(sprite.x, sprite.y, sprite.width, sprite.height)
-            end()
+            use(ShapeType.Line) {
+                rect(sprite.x, sprite.y, sprite.width, sprite.height)
+            }
         }
     }
 }

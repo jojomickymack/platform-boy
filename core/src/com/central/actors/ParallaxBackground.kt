@@ -6,7 +6,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.badlogic.gdx.utils.Array
 import com.central.GameObj
 
-class ParallaxBackground(private val layers: Array<Texture>) : Actor() {
+class ParallaxBackground(private val layers: MutableList<Texture>) : Actor() {
 
     private var scroll = 0f
     private val speedDifference = 200

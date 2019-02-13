@@ -24,7 +24,7 @@ class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
         sprite = Sprite()
         sprite.setPosition(x, y)
         vel = Vector2(SKELETON_VELOCITY, 0f)
-        rect = Rectangle()
+        myRect = Rectangle()
         scaledRect = Rectangle()
         //split the sprite-sheet into different textures
         val tmp = walkSheet.split(walkSheet.regionWidth / ANIMATION_FRAME_SIZE, walkSheet.regionHeight)
@@ -54,11 +54,8 @@ class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
         //senseAndFollow()
 
         // change the direction based on velocity
-        direction = if (vel.x < 0) {
-            Direction.LEFT
-        } else {
-            Direction.RIGHT
-        }
+        direction = if (vel.x < 0) Direction.LEFT
+        else Direction.RIGHT
 
         when (direction) {
             Direction.RIGHT -> sprite.setFlip(true, false)
@@ -74,10 +71,10 @@ class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
             if (it is PolylineMapObject) {
                 val myVerts = it.polyline.transformedVertices
                 for (i in 0..myVerts.size - 4 step 4) {
-                    if (checkYCollision(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.rect, this.vel)) {
+                    if (checkYCollision(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.myRect, this.vel)) {
                         this.vel.y = 0f
                         this.grounded = true
-                        this.sprite.y = findYOnSlope(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.rect, this.vel)
+                        this.sprite.y = findYOnSlope(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.myRect, this.vel)
                     }
                 }
             }
@@ -107,7 +104,7 @@ class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
 */
 
         this.vel.y -= grav
-        this.rect.set(sprite.x, sprite.y, sprite.width, sprite.height)
+        this.myRect.set(sprite.x, sprite.y, sprite.width, sprite.height)
         this.scaledRect.set(this.sprite.x * Constants.unitScale + this.vel.x * Constants.unitScale, this.sprite.y * Constants.unitScale + this.vel.y * Constants.unitScale, this.sprite.height * Constants.unitScale, this.sprite.height * Constants.unitScale)
 
         var myTiles = GameObj.mm.getVertNeighbourTiles(this.vel, this.scaledRect, GameObj.mm.tileLayer)
@@ -115,11 +112,11 @@ class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
         myTiles.forEach {
             if (this.scaledRect.overlaps(it)) {
                 if (this.vel.y > 0) {
-                    this.rect.y = it.y / Constants.unitScale - this.scaledRect.height / Constants.unitScale
+                    this.myRect.y = it.y / Constants.unitScale - this.scaledRect.height / Constants.unitScale
                     this.scaledRect.y = it.y - this.scaledRect.height
 
                 } else if (this.vel.y < 0) {
-                    this.rect.y = it.y / Constants.unitScale + it.height / Constants.unitScale
+                    this.myRect.y = it.y / Constants.unitScale + it.height / Constants.unitScale
                     this.scaledRect.y = it.y + it.height
                     this.grounded = true
                 }

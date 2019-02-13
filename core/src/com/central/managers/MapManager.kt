@@ -1,7 +1,7 @@
 package com.central.managers
 
 import com.badlogic.gdx.graphics.Color.PINK
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line
 import com.badlogic.gdx.maps.MapLayer
 import com.badlogic.gdx.maps.objects.PolylineMapObject
 import com.badlogic.gdx.maps.tiled.TmxMapLoader
@@ -17,6 +17,7 @@ import com.central.actors.Zombie
 
 import com.central.GameObj
 import ktx.actors.plusAssign
+import ktx.graphics.use
 
 class MapManager {
     val map = TmxMapLoader().load("map01.tmx")
@@ -52,10 +53,10 @@ class MapManager {
                 val myVerts = it.polyline.transformedVertices
 
                 with(GameObj.sr) {
-                    color = PINK
-                    begin(ShapeRenderer.ShapeType.Line)
-                    polyline(myVerts)
-                    end()
+                    use(Line) {
+                        color = PINK
+                        polyline(myVerts)
+                    }
                 }
             }
         }

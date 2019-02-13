@@ -2,7 +2,6 @@ package com.central.managers
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.utils.Array
 import com.central.Constants
 import com.central.GameObj
 import com.central.actors.OnScreenGamepad
@@ -15,13 +14,9 @@ const val grav = 2f
 class GameManager {
     var player = Player()
 
-    private var textures = Array<Texture>()
+    private var textures = mutableListOf<Texture>()
 
-    val textureStrings = arrayOf("parallax/img1.png",
-            "parallax/img2.png",
-            "parallax/img3.png",
-            "parallax/img4.png",
-            "parallax/img5.png")
+    var textureStrings = (1..5).map { "parallax/img$it.png" }.toTypedArray()
 
     var parallaxBackground = ParallaxBackground(textures)
     val osgp = OnScreenGamepad()
@@ -29,44 +24,50 @@ class GameManager {
     val music = Gdx.audio.newMusic(Gdx.files.internal("theme.ogg"))
 
     init {
-        textureStrings.forEach { textures.add(Texture(Gdx.files.internal(it))) }
+        textureStrings.forEach { textures = (textures + Texture(Gdx.files.internal(it))).toMutableList() }
         parallaxBackground = ParallaxBackground(textures)
-        GameObj.backgroundStg += parallaxBackground
 
-        GameObj.mm.spawnEnemies()
-        GameObj.stg += player
-        GameObj.hudStg += osgp
+        with(GameObj) {
+            backgroundStg += parallaxBackground
+
+            mm.spawnEnemies()
+            stg += player
+            hudStg += osgp
+        }
 
         music.isLooping = true
         music.play()
     }
 
     fun renderGame(delta: Float) {
-        GameObj.hudStg.act(delta)
 
-        GameObj.backgroundStg.act(delta)
-        GameObj.backgroundStg.draw()
+        with(GameObj) {
+            hudStg.act(delta)
 
-        GameObj.im.handleInput()
+            backgroundStg.act(delta)
+            backgroundStg.draw()
 
-        GameObj.stg.act(delta)
-        GameObj.stg.draw()
+            im.handleInput()
 
-        GameObj.mm.mr.setView(GameObj.cam)
-        GameObj.mm.mr.render()
+            stg.act(delta)
+            stg.draw()
 
-        GameObj.sr.projectionMatrix = GameObj.cam.combined.scl(Constants.unitScale)
-        GameObj.mm.drawShapes(delta)
+            mm.mr.setView(cam)
+            mm.mr.render()
 
-        GameObj.cam.position.x = player.sprite.x * Constants.unitScale
-        GameObj.cam.position.y = player.sprite.y * Constants.unitScale
-        GameObj.cam.update()
+            sr.projectionMatrix = cam.combined.scl(Constants.unitScale)
+            mm.drawShapes(delta)
 
-        //GameObj.hudStg.batch.projectionMatrix = GameObj.hud.combined
-        GameObj.hudStg.draw()
-        GameObj.hudStg.batch.begin()
-        GameObj.tm.displayMessage(GameObj.hudStg.batch)
-        GameObj.hudStg.batch.end()
+            cam.position.x = player.sprite.x * Constants.unitScale
+            cam.position.y = player.sprite.y * Constants.unitScale
+            cam.update()
+
+            //GameObj.hudStg.batch.projectionMatrix = GameObj.hud.combined
+            hudStg.draw()
+            hudStg.batch.begin()
+            tm.displayMessage(hudStg.batch)
+            hudStg.batch.end()
+        }
     }
 
 }

@@ -3,7 +3,7 @@ package com.central.actors
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.*
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line
 import com.badlogic.gdx.maps.objects.PolylineMapObject
 import com.badlogic.gdx.math.Intersector
 import com.badlogic.gdx.math.Polygon
@@ -13,6 +13,7 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 import com.central.Constants
 import com.central.GameObj
 import com.central.managers.grav
+import ktx.graphics.use
 
 
 class State
@@ -41,7 +42,8 @@ class Player : Actor() {
     private val maxVelocity = 5f
     private val jumpVelocity = 40f
 
-    var rect = Rectangle()
+    // avoiding name collision by having this variable be rect - that's used elsewhere
+    var myRect = Rectangle()
     var scaledRect = Rectangle()
 
     var lifeState = LifeState.ALIVE
@@ -154,16 +156,16 @@ class Player : Actor() {
             if (it is PolylineMapObject) {
                 val myVerts = it.polyline.transformedVertices
                 for (i in 0..myVerts.size - 4 step 4) {
-                    if (checkYCollision(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.rect, this.vel)) {
+                    if (checkYCollision(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.myRect, this.vel)) {
                         this.vel.y = 0f
                         this.grounded = true
-                        this.sprite.y = findYOnSlope(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.rect, this.vel)
+                        this.sprite.y = findYOnSlope(Vector2(myVerts[i], myVerts[i + 1]), Vector2(myVerts[i + 2], myVerts[i + 3]), this.myRect, this.vel)
                     }
                 }
             }
         }
 
-        this.rect.set(this.sprite.x, this.sprite.y + this.vel.y, this.sprite.height, this.sprite.height)
+        this.myRect.set(this.sprite.x, this.sprite.y + this.vel.y, this.sprite.height, this.sprite.height)
         this.scaledRect.set(this.sprite.x * Constants.unitScale, this.sprite.y * Constants.unitScale + this.vel.y * Constants.unitScale, this.sprite.height * Constants.unitScale, this.sprite.height * Constants.unitScale)
 
         var myTiles = GameObj.mm.getVertNeighbourTiles(this.vel, this.scaledRect, GameObj.mm.tileLayer)
@@ -171,10 +173,10 @@ class Player : Actor() {
         myTiles.forEach {
             if (this.scaledRect.overlaps(it)) {
                 if (this.vel.y > 0) {
-                    this.rect.y = it.y / Constants.unitScale - this.scaledRect.height / Constants.unitScale
+                    this.myRect.y = it.y / Constants.unitScale - this.scaledRect.height / Constants.unitScale
                     this.scaledRect.y = it.y - this.scaledRect.height
                 } else if (this.vel.y < 0) {
-                    this.rect.y = it.y / Constants.unitScale + it.height / Constants.unitScale
+                    this.myRect.y = it.y / Constants.unitScale + it.height / Constants.unitScale
                     this.scaledRect.y = it.y + it.height
                     this.grounded = true
                 }
@@ -183,14 +185,14 @@ class Player : Actor() {
             }
         }
 
-        this.rect.set(this.sprite.x + this.vel.x, this.sprite.y, this.sprite.height, this.sprite.height)
+        this.myRect.set(this.sprite.x + this.vel.x, this.sprite.y, this.sprite.height, this.sprite.height)
         this.scaledRect.set(this.sprite.x * Constants.unitScale + this.vel.x * Constants.unitScale, this.sprite.y * Constants.unitScale, this.sprite.height * Constants.unitScale, this.sprite.height * Constants.unitScale)
 
         myTiles = GameObj.mm.getHorizNeighbourTiles(this.vel, this.scaledRect, GameObj.mm.tileLayer)
 
         myTiles.forEach {
             if (this.scaledRect.overlaps(it)) {
-                this.rect.x -= this.vel.x
+                this.myRect.x -= this.vel.x
                 this.scaledRect.x -= this.vel.x * Constants.unitScale
                 this.state = PlayerStates.standing
                 this.vel.x = 0f
@@ -218,15 +220,16 @@ class Player : Actor() {
 
         batch.end()
 
-        // draw a debug box around the player - I shouldn't have shadowed the variable name rect
-        GameObj.sr.begin(ShapeRenderer.ShapeType.Line)
-        GameObj.sr.rect(this.rect.x, this.rect.y, this.rect.width, this.rect.height)
-        GameObj.sr.end()
+        with(GameObj.sr) {
+            use(Line) {
+                rect(myRect.x, myRect.y, myRect.width, myRect.height)
+            }
+        }
         batch.begin()
     }
 
     fun checkCollectibleHit() {
-        this.rect.set(sprite.x, sprite.y, sprite.width, sprite.height)
+        this.myRect.set(sprite.x, sprite.y, sprite.width, sprite.height)
         this.scaledRect.set(sprite.x * Constants.unitScale, sprite.y * Constants.unitScale, sprite.width * Constants.unitScale, sprite.height * Constants.unitScale)
 
         // get the tiles from map utilities
@@ -248,12 +251,12 @@ class Player : Actor() {
     }
 
     fun checkEnemiesHit() {
-        this.rect.set(this.sprite.x, this.sprite.y, this.sprite.width, this.sprite.height)
+        this.myRect.set(this.sprite.x, this.sprite.y, this.sprite.width, this.sprite.height)
 
         // check whether bob collides with the enemies
         GameObj.stg.actors.forEach {
             if (it is Zombie)
-            if (it.state == Enemy.State.ALIVE && it.rect.overlaps(this.rect)) {
+            if (it.state == Enemy.State.ALIVE && it.myRect.overlaps(this.myRect)) {
                 if (GameObj.lives > 0) {
                     GameObj.lives--
                     this.sprite.setPosition(400f, 150f)
@@ -264,7 +267,7 @@ class Player : Actor() {
     }
 
     fun checkOutOfBounds() {
-        if (this.rect.y < -1000) {
+        if (this.myRect.y < -1000) {
             GameObj.lives--
             this.sprite.setPosition(400f, 150f)
             trnsprtSnd.play()
