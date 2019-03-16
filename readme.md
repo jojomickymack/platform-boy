@@ -1,5 +1,7 @@
 # Platformer Boy Example With Angled Terrain
 
+![platform_boy.gif](.github/platform_boy.gif?raw=true)
+
 This is heavily influenced by the platformer example project in 'LibGDX Cross Platform Development Blueprints' by Indraneel 
 Potnis.
 
