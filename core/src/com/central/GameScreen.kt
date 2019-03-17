@@ -18,4 +18,10 @@ class Game(val application: Application) : KtxScreen {
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         GameObj.gm.renderGame(delta)
     }
+
+    override fun dispose() {
+        GameObj.dispose()
+        println("all disposable memory freed")
+        super.dispose()
+    }
 }

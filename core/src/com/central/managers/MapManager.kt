@@ -12,7 +12,6 @@ import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.Array
 import com.badlogic.gdx.utils.Pool
-import com.central.Constants
 import com.central.actors.Zombie
 
 import com.central.GameObj
@@ -20,9 +19,6 @@ import ktx.actors.plusAssign
 import ktx.graphics.use
 
 class MapManager {
-    val map = TmxMapLoader().load("map01.tmx")
-    val mr = OrthogonalTiledMapRenderer(map, Constants.unitScale)
-
     // these layers go with the commented out shape parsing logic below which is also commented out
 /*
     val floorLayer = map.layers.get("floors01") as MapLayer
@@ -33,10 +29,10 @@ class MapManager {
     val myWalls = wallLayer.objects
 */
 
-    val tileLayer = map.layers.get("tiles01") as TiledMapTileLayer
-    val collectablesLayer = map.layers.get("collectables") as TiledMapTileLayer
-    val enemyLayer = map.layers.get("enemies") as MapLayer
-    val rampLayer = map.layers.get("ramp01") as MapLayer
+    val tileLayer = GameObj.map.layers.get("tiles01") as TiledMapTileLayer
+    val collectablesLayer = GameObj.map.layers.get("collectables") as TiledMapTileLayer
+    val enemyLayer = GameObj.map.layers.get("enemies") as MapLayer
+    val rampLayer = GameObj.map.layers.get("ramp01") as MapLayer
     val myRamps = rampLayer.objects
     val myEnemies = enemyLayer.objects
 

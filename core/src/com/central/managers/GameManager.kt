@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Texture
 import com.central.Constants
 import com.central.GameObj
-import com.central.actors.OnScreenGamepad
 import com.central.actors.Player
 import com.central.actors.ParallaxBackground
 import ktx.actors.plusAssign
@@ -14,18 +13,14 @@ const val grav = 2f
 class GameManager {
     var player = Player()
 
-    private var textures = mutableListOf<Texture>()
-
     var textureStrings = (1..5).map { "parallax/img$it.png" }.toTypedArray()
 
-    var parallaxBackground = ParallaxBackground(textures)
-    val osgp = OnScreenGamepad()
-
-    val music = Gdx.audio.newMusic(Gdx.files.internal("theme.ogg"))
+    var parallaxBackground = ParallaxBackground(GameObj.textures)
 
     init {
-        textureStrings.forEach { textures = (textures + Texture(Gdx.files.internal(it))).toMutableList() }
-        parallaxBackground = ParallaxBackground(textures)
+        println("initializing the gm")
+        textureStrings.forEach { GameObj.textures = (GameObj.textures + Texture(Gdx.files.internal(it))).toMutableList() }
+        parallaxBackground = ParallaxBackground(GameObj.textures)
 
         with(GameObj) {
             backgroundStg += parallaxBackground
@@ -35,8 +30,8 @@ class GameManager {
             hudStg += osgp
         }
 
-        music.isLooping = true
-        music.play()
+        GameObj.music.isLooping = true
+        GameObj.music.play()
     }
 
     fun renderGame(delta: Float) {
@@ -52,8 +47,8 @@ class GameManager {
             stg.act(delta)
             stg.draw()
 
-            mm.mr.setView(cam)
-            mm.mr.render()
+            mr.setView(cam)
+            mr.render()
 
             sr.projectionMatrix = cam.combined.scl(Constants.unitScale)
             mm.drawShapes(delta)

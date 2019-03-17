@@ -1,11 +1,8 @@
 package com.central.actors
 
-import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.graphics.g2d.Animation.PlayMode
 import com.badlogic.gdx.maps.objects.PolylineMapObject
-import com.badlogic.gdx.maps.objects.RectangleMapObject
 import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.math.Vector2
 import com.central.Constants
@@ -13,7 +10,7 @@ import com.central.GameObj
 import com.central.managers.grav
 
 class Zombie(x: Float, y: Float, width: Float, height: Float) : Enemy() {
-    internal var tex = Texture(Gdx.files.internal("zombie.png"))
+    internal var tex = GameObj.zombieSheetTex
     internal var walkSheet = TextureRegion(tex, 0, 0, tex.width, tex.height)
     internal var direction = Direction.LEFT //denotes skeleton's direction
     internal var walkAnimation: Animation<TextureRegion>          // animation instance

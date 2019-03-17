@@ -1,7 +1,6 @@
 package com.central.actors
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType.Line
 import com.badlogic.gdx.maps.objects.PolylineMapObject
@@ -32,7 +31,7 @@ enum class LifeState {
 }
 
 class Player : Actor() {
-    private val tex = Texture("adventurer_sheet.png")
+    private val tex = GameObj.adventurerSheetTex
     private var walkSheet = TextureRegion(tex, 0, 0, tex.width, tex.height)
     private var currentFrame: TextureRegion
     private val vel = Vector2(0f, 0f)
